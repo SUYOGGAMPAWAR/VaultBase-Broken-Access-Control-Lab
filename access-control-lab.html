@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VaultBase — Secure Asset Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0b0d;
+    --bg2: #111318;
+    --bg3: #191c23;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #e84040;
+    --accent2: #ff6b6b;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --info: #60a5fa;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 52px;
+    background: rgba(10,11,13,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px;
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 9px;
+    font-weight: 700; font-size: 15px; letter-spacing: -0.3px;
+  }
+  .logo-mark {
+    width: 24px; height: 24px;
+    background: var(--accent);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff;
+  }
+  .nav-links { display: flex; align-items: center; gap: 6px; }
+  .nav-links a, .nav-links button {
+    font-family: var(--sans);
+    font-size: 13px; color: var(--muted);
+    text-decoration: none;
+    padding: 6px 12px; border-radius: 6px;
+    background: none; border: none; cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .nav-links a:hover, .nav-links button:hover { color: var(--text); background: var(--bg3); }
+  .nav-links .active { color: var(--text); }
+  #nav-user { display: none; align-items: center; gap: 10px; }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, #1e3a5f, #3b82f6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: #fff;
+  }
+
+  /* ── PAGES ── */
+  .page { display: none; padding-top: 52px; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* ── LOGIN ── */
+  #page-login {
+    display: none;
+    align-items: center; justify-content: center;
+    background: radial-gradient(ellipse 60% 50% at 50% -10%, rgba(232,64,64,0.08), transparent);
+  }
+  #page-login.active { display: flex; }
+  .login-box {
+    width: 100%; max-width: 400px;
+    margin: 40px 20px;
+  }
+  .login-brand {
+    text-align: center; margin-bottom: 36px;
+  }
+  .login-brand h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+  .login-brand p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    padding: 28px;
+  }
+  .field-label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.6px; margin-bottom: 7px;
+  }
+  .input-field {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .input-field:focus { border-color: rgba(232,64,64,0.5); }
+  .field-group { margin-bottom: 16px; }
+  .btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    border: none; border-radius: 9px;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    margin-top: 8px;
+  }
+  .btn:hover { opacity: 0.88; }
+  .btn:active { transform: scale(0.98); }
+  .error-msg {
+    color: var(--accent2);
+    font-size: 12px;
+    font-family: var(--mono);
+    margin-top: 12px;
+    display: none;
+    padding: 10px 12px;
+    background: rgba(232,64,64,0.08);
+    border-radius: 7px;
+    border: 1px solid rgba(232,64,64,0.2);
+  }
+  .hint-box {
+    margin-top: 14px;
+    padding: 14px;
+    background: rgba(59,130,246,0.06);
+    border: 1px solid rgba(59,130,246,0.15);
+    border-radius: 9px;
+    font-family: var(--mono);
+    font-size: 12px; color: var(--info); line-height: 1.7;
+  }
+  .hint-box strong { color: #fff; }
+
+  /* ── DASHBOARD ── */
+  #page-dashboard {
+    padding: 80px 28px 40px;
+    max-width: 1000px; margin: 0 auto;
+  }
+  .page-header { margin-bottom: 32px; }
+  .page-header h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+  .page-header p { color: var(--muted); margin-top: 4px; }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 20px;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.8px; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .stat-green .stat-value { color: var(--green); }
+  .stat-amber .stat-value { color: var(--amber); }
+  .stat-blue .stat-value { color: var(--blue); }
+
+  .section-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  .asset-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    overflow: hidden;
+  }
+  .asset-table th {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.6px;
+    text-align: left; padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+  .asset-table td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .asset-table tr:last-child td { border-bottom: none; }
+  .asset-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .badge {
+    display: inline-block;
+    padding: 3px 9px; border-radius: 5px;
+    font-size: 11px; font-weight: 600; font-family: var(--mono);
+  }
+  .badge-green { background: rgba(34,197,94,0.1); color: var(--green); }
+  .badge-amber { background: rgba(245,158,11,0.1); color: var(--amber); }
+  .badge-red { background: rgba(232,64,64,0.1); color: var(--accent2); }
+
+  .tip-panel {
+    margin-top: 20px;
+    background: rgba(245,158,11,0.05);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 13px; line-height: 1.7;
+    color: var(--amber);
+  }
+  .tip-panel strong { color: #fff; }
+  .tip-panel code {
+    font-family: var(--mono);
+    background: rgba(245,158,11,0.1);
+    padding: 1px 6px; border-radius: 4px;
+    font-size: 12px;
+  }
+
+  /* ── ADMIN PANEL ── */
+  #page-admin {
+    padding: 80px 28px 40px;
+    max-width: 1000px; margin: 0 auto;
+  }
+  .vuln-banner {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(232,64,64,0.06);
+    border: 1px solid rgba(232,64,64,0.25);
+    border-radius: 11px;
+    padding: 18px 20px;
+    margin-bottom: 28px;
+  }
+  .vuln-icon {
+    flex-shrink: 0;
+    width: 36px; height: 36px; border-radius: 8px;
+    background: rgba(232,64,64,0.15);
+    border: 1px solid rgba(232,64,64,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .vuln-title { font-weight: 700; font-size: 14px; color: var(--accent2); margin-bottom: 4px; }
+  .vuln-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .vuln-desc a { color: var(--info); text-decoration: none; }
+  .vuln-desc a:hover { text-decoration: underline; }
+
+  .admin-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .admin-header h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+  .admin-badge {
+    padding: 4px 10px; border-radius: 6px;
+    background: rgba(232,64,64,0.15);
+    border: 1px solid rgba(232,64,64,0.3);
+    font-size: 11px; font-weight: 600; color: var(--accent2);
+    font-family: var(--mono); letter-spacing: 0.5px;
+  }
+
+  .admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px; margin-bottom: 24px;
+  }
+  @media (max-width: 600px) { .admin-grid { grid-template-columns: 1fr; } }
+
+  .admin-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 11px;
+    padding: 20px;
+  }
+  .admin-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 14px; color: var(--text); }
+
+  .user-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .user-row:last-child { border-bottom: none; }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .user-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-online { background: var(--green); }
+  .dot-offline { background: var(--muted); }
+  .user-name { font-size: 13px; }
+  .user-email { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .role-pill {
+    font-size: 11px; font-family: var(--mono);
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .role-admin { background: rgba(232,64,64,0.12); color: var(--accent2); }
+  .role-user { background: rgba(107,114,128,0.15); color: var(--muted); }
+
+  .key-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .key-row:last-child { border-bottom: none; }
+  .key-name { font-size: 12px; color: var(--muted); }
+  .key-val { font-family: var(--mono); font-size: 12px; color: var(--info); letter-spacing: 0.5px; }
+
+  .action-btn {
+    display: block; width: 100%;
+    padding: 9px 14px; margin-top: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--sans); font-size: 13px;
+    text-align: left; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .action-btn:hover { background: rgba(232,64,64,0.08); border-color: rgba(232,64,64,0.3); color: var(--accent2); }
+  .action-btn.danger { color: var(--accent2); border-color: rgba(232,64,64,0.2); }
+
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 14px 16px;
+    font-family: var(--mono); font-size: 12px;
+    line-height: 1.8; color: #a5b4fc;
+    overflow-x: auto;
+    margin-top: 10px;
+  }
+  .code-block .comment { color: #4b5563; }
+  .code-block .keyword { color: #f472b6; }
+  .code-block .string { color: #86efac; }
+  .code-block .fn { color: #fbbf24; }
+
+  /* ── LAB PANEL ── */
+  .lab-panel {
+    position: fixed; bottom: 20px; right: 20px; z-index: 200;
+    width: 320px;
+    background: var(--bg2);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .lab-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(59,130,246,0.08);
+    border-bottom: 1px solid rgba(59,130,246,0.15);
+    cursor: pointer;
+  }
+  .lab-header-left { display: flex; align-items: center; gap: 9px; }
+  .lab-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .lab-title { font-size: 12px; font-weight: 700; color: var(--info); letter-spacing: 0.5px; text-transform: uppercase; }
+  .lab-toggle { font-size: 16px; color: var(--muted); transition: transform 0.2s; }
+  .lab-body { padding: 16px; }
+  .lab-body.collapsed { display: none; }
+  .lab-step {
+    display: flex; gap: 10px; margin-bottom: 12px;
+  }
+  .step-num {
+    flex-shrink: 0; width: 20px; height: 20px;
+    border-radius: 50%; background: rgba(59,130,246,0.2);
+    border: 1px solid rgba(59,130,246,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--info);
+  }
+  .step-text { font-size: 12px; color: var(--muted); line-height: 1.55; }
+  .step-text strong { color: var(--text); }
+  .step-text code { font-family: var(--mono); background: var(--bg3); padding: 1px 5px; border-radius: 3px; font-size: 11px; color: var(--info); }
+  .lab-link {
+    display: block; margin-top: 12px;
+    padding: 9px 12px;
+    background: rgba(59,130,246,0.08);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 8px;
+    font-size: 11px; color: var(--info); text-decoration: none;
+    text-align: center;
+    transition: background 0.15s;
+  }
+  .lab-link:hover { background: rgba(59,130,246,0.15); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 9px; padding: 11px 18px;
+    font-size: 13px; font-family: var(--mono);
+    z-index: 300; opacity: 0; transition: opacity 0.2s;
+    pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="logo-mark">VB</div>
+    VaultBase
+  </div>
+  <div id="nav-user" class="nav-links">
+    <a href="#" onclick="navigate('dashboard')" id="nav-dash">Dashboard</a>
+    <a href="#" onclick="navigate('admin')" id="nav-admin" style="display:none; color:var(--accent2);">Admin Panel</a>
+    <button onclick="logout()">Sign out</button>
+    <div class="avatar" id="nav-avatar">U</div>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ── PAGE: LOGIN ── -->
+<div class="page" id="page-login">
+  <div class="login-box">
+    <div class="login-brand">
+      <h1>Welcome back</h1>
+      <p>Sign in to your VaultBase account</p>
+    </div>
+    <div class="card">
+      <div class="field-group">
+        <label class="field-label">Username</label>
+        <input id="inp-user" class="input-field" type="text" placeholder="username" autocomplete="off" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <input id="inp-pass" class="input-field" type="password" placeholder="••••••••" />
+      </div>
+      <button class="btn" onclick="doLogin()">Sign in →</button>
+      <div class="error-msg" id="login-err">Invalid credentials. Try again.</div>
+    </div>
+    <div class="hint-box">
+      <strong>Lab credentials:</strong><br/>
+      user: <strong>wiener</strong> / pass: <strong>peter</strong><br/>
+      user: <strong>carlos</strong> / pass: <strong>montoya</strong><br/>
+      <br/>
+      <strong>Admin credentials are unknown.</strong> Try to reach the admin panel <em>without</em> them.
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE: DASHBOARD ── -->
+<div class="page" id="page-dashboard">
+  <div style="max-width:1000px;margin:0 auto;padding:80px 28px 40px;">
+    <div class="page-header">
+      <h2>Asset Dashboard</h2>
+      <p id="dash-welcome" style="color:var(--muted);margin-top:4px;"></p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card stat-green">
+        <div class="stat-label">Portfolio Value</div>
+        <div class="stat-value">$84.2K</div>
+        <div class="stat-sub">↑ 3.4% this week</div>
+      </div>
+      <div class="stat-card stat-blue">
+        <div class="stat-label">Active Assets</div>
+        <div class="stat-value">12</div>
+        <div class="stat-sub">3 pending review</div>
+      </div>
+      <div class="stat-card stat-amber">
+        <div class="stat-label">Risk Score</div>
+        <div class="stat-value">6.1</div>
+        <div class="stat-sub">Moderate exposure</div>
+      </div>
+    </div>
+    <div class="section-title">Your Holdings</div>
+    <table class="asset-table">
+      <thead>
+        <tr>
+          <th>Asset</th><th>Type</th><th>Value</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>AAPL — 40 shares</td><td>Equity</td><td>$8,340</td><td><span class="badge badge-green">Active</span></td></tr>
+        <tr><td>ETH — 2.5 units</td><td>Crypto</td><td>$12,100</td><td><span class="badge badge-green">Active</span></td></tr>
+        <tr><td>US Treasury Bond</td><td>Fixed Income</td><td>$25,000</td><td><span class="badge badge-amber">Maturing</span></td></tr>
+        <tr><td>NVDA — 15 shares</td><td>Equity</td><td>$19,500</td><td><span class="badge badge-green">Active</span></td></tr>
+        <tr><td>S&P 500 ETF</td><td>Fund</td><td>$19,260</td><td><span class="badge badge-red">Review</span></td></tr>
+      </tbody>
+    </table>
+    <div class="tip-panel" style="margin-top:20px;">
+      <strong>🔍 Lab Objective:</strong> You're logged in as a regular user. You should only have access to this dashboard.
+      <br/><br/>
+      But here's the thing — try navigating to <code>#admin</code> in the URL bar, or click
+      <a href="#" onclick="navigate('admin'); return false;" style="color:#fff; font-weight:600;">Admin Panel</a> above.
+      A broken access control implementation means there's nothing stopping you.
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE: ADMIN (UNPROTECTED) ── -->
+<div class="page" id="page-admin">
+  <div style="max-width:1000px;margin:0 auto;padding:80px 28px 60px;">
+
+    <div class="vuln-banner">
+      <div class="vuln-icon">⚠</div>
+      <div>
+        <div class="vuln-title">VULNERABILITY TRIGGERED — Broken Access Control (CWE-284)</div>
+        <div class="vuln-desc">
+          You accessed this admin panel without administrator privileges. In a secure system, the server would verify your role before rendering this page. This application only checks the route client-side.
+          <br/>Reference: <a href="https://portswigger.net/web-security/access-control" target="_blank">portswigger.net/web-security/access-control</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-header">
+      <h2>Admin Control Panel</h2>
+      <span class="admin-badge">ADMIN AREA</span>
+    </div>
+
+    <div class="admin-grid">
+      <!-- User Management -->
+      <div class="admin-card">
+        <h3>User Management</h3>
+        <div class="user-row">
+          <div class="user-info">
+            <div class="user-dot dot-online"></div>
+            <div>
+              <div class="user-name">administrator</div>
+              <div class="user-email">admin@vaultbase.io</div>
+            </div>
+          </div>
+          <span class="role-pill role-admin">admin</span>
+        </div>
+        <div class="user-row">
+          <div class="user-info">
+            <div class="user-dot dot-online"></div>
+            <div>
+              <div class="user-name">wiener</div>
+              <div class="user-email">wiener@vaultbase.io</div>
+            </div>
+          </div>
+          <span class="role-pill role-user">user</span>
+        </div>
+        <div class="user-row">
+          <div class="user-info">
+            <div class="user-dot dot-offline"></div>
+            <div>
+              <div class="user-name">carlos</div>
+              <div class="user-email">carlos@vaultbase.io</div>
+            </div>
+          </div>
+          <span class="role-pill role-user">user</span>
+        </div>
+      </div>
+
+      <!-- Secret Config -->
+      <div class="admin-card">
+        <h3>Internal Configuration</h3>
+        <div class="key-row">
+          <div class="key-name">DB Connection String</div>
+          <div class="key-val">postgres://admin:s3cr3t@...</div>
+        </div>
+        <div class="key-row">
+          <div class="key-name">JWT Secret</div>
+          <div class="key-val">hs256_vault_9f3a...</div>
+        </div>
+        <div class="key-row">
+          <div class="key-name">API Master Key</div>
+          <div class="key-val">vb_live_sk_X9mK...</div>
+        </div>
+        <div class="key-row">
+          <div class="key-name">Encryption Salt</div>
+          <div class="key-val">bcrypt_12_rounds...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dangerous Actions -->
+    <div class="admin-card" style="margin-bottom:20px;">
+      <h3>Privileged Actions</h3>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+        <button class="action-btn" onclick="showToast('⚠ Action would execute in a real system')">Export all user data</button>
+        <button class="action-btn" onclick="showToast('⚠ Action would execute in a real system')">Reset all passwords</button>
+        <button class="action-btn danger" onclick="showToast('⚠ Action would execute in a real system')">Delete user: carlos</button>
+        <button class="action-btn danger" onclick="showToast('⚠ Action would execute in a real system')">Revoke all sessions</button>
+      </div>
+    </div>
+
+    <!-- Vulnerable Code -->
+    <div class="admin-card">
+      <h3>Vulnerable Code — Why This Works</h3>
+      <div class="code-block">
+<span class="comment">// ❌ BAD — Client-side only check (bypassable)</span>
+<span class="keyword">function</span> <span class="fn">renderAdminPage</span>() {
+  <span class="keyword">const</span> user = JSON.parse(localStorage.getItem(<span class="string">'session'</span>));
+  <span class="comment">// Checks role only in the browser — attacker can ignore this</span>
+  <span class="keyword">if</span> (user.role === <span class="string">'admin'</span>) showAdminUI();
+  <span class="comment">// No server-side verification → anyone who knows the URL can reach it</span>
+}
+
+<span class="comment">// ✅ GOOD — Server-side enforcement</span>
+<span class="comment">// app.get('/admin', requireRole('admin'), (req, res) => {</span>
+<span class="comment">//   res.render('admin');  // Only reached if role verified server-side</span>
+<span class="comment">// });</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LAB PANEL ── -->
+<div class="lab-panel" id="lab-panel">
+  <div class="lab-header" onclick="toggleLab()">
+    <div class="lab-header-left">
+      <div class="lab-dot"></div>
+      <span class="lab-title">PortSwigger Lab</span>
+    </div>
+    <span class="lab-toggle" id="lab-toggle-icon">▲</span>
+  </div>
+  <div class="lab-body" id="lab-body">
+    <div class="lab-step">
+      <div class="step-num">1</div>
+      <div class="step-text">Login as <strong>wiener / peter</strong> — a regular, non-admin user</div>
+    </div>
+    <div class="lab-step">
+      <div class="step-num">2</div>
+      <div class="step-text">Observe you land on the <strong>Dashboard</strong> with no admin link</div>
+    </div>
+    <div class="lab-step">
+      <div class="step-num">3</div>
+      <div class="step-text">Edit the URL hash to <code>#admin</code> or click <strong>Admin Panel</strong> in nav</div>
+    </div>
+    <div class="lab-step">
+      <div class="step-num">4</div>
+      <div class="step-text">Access is granted — no role check occurred server-side</div>
+    </div>
+    <a class="lab-link" href="https://portswigger.net/web-security/access-control" target="_blank">
+      Read full theory on PortSwigger →
+    </a>
+  </div>
+</div>
+
+<script>
+  const USERS = {
+    wiener: { pass: 'peter', role: 'user', display: 'Wiener' },
+    carlos: { pass: 'montoya', role: 'user', display: 'Carlos' },
+    administrator: { pass: 'admin123', role: 'admin', display: 'Admin' }
+  };
+
+  let session = JSON.parse(localStorage.getItem('vb_session') || 'null');
+
+  function navigate(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    window.location.hash = page;
+    updateNav();
+  }
+
+  function updateNav() {
+    const navUser = document.getElementById('nav-user');
+    if (session) {
+      navUser.style.display = 'flex';
+      document.getElementById('nav-avatar').textContent = session.display[0].toUpperCase();
+      // Admin link visible only to admins — but the PAGE itself is accessible to all (the vuln)
+      document.getElementById('nav-admin').style.display = session.role === 'admin' ? 'inline' : 'none';
+    } else {
+      navUser.style.display = 'none';
+    }
+  }
+
+  function doLogin() {
+    const u = document.getElementById('inp-user').value.trim().toLowerCase();
+    const p = document.getElementById('inp-pass').value.trim();
+    const err = document.getElementById('login-err');
+    err.style.display = 'none';
+    if (USERS[u] && USERS[u].pass === p) {
+      session = { username: u, role: USERS[u].role, display: USERS[u].display };
+      localStorage.setItem('vb_session', JSON.stringify(session));
+      document.getElementById('dash-welcome').textContent =
+        'Signed in as ' + u + ' — role: ' + USERS[u].role;
+      navigate('dashboard');
+      showToast('Signed in as ' + u);
+    } else {
+      err.style.display = 'block';
+    }
+  }
+
+  function logout() {
+    session = null;
+    localStorage.removeItem('vb_session');
+    navigate('login');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function toggleLab() {
+    const body = document.getElementById('lab-body');
+    const icon = document.getElementById('lab-toggle-icon');
+    const collapsed = body.classList.toggle('collapsed');
+    icon.textContent = collapsed ? '▼' : '▲';
+  }
+
+  // ── ROUTING (the vulnerable part) ──
+  // NOTE: The admin page is rendered purely based on URL hash.
+  // There is NO server-side role check. Any user can visit #admin.
+  function route() {
+    const hash = window.location.hash.replace('#', '') || 'login';
+    if (!session && hash !== 'login') {
+      navigate('login'); return;
+    }
+    if (session && hash === 'login') {
+      navigate('dashboard'); return;
+    }
+    // VULNERABILITY: admin page is served without checking session.role
+    if (['login', 'dashboard', 'admin'].includes(hash)) {
+      navigate(hash);
+    } else {
+      navigate(session ? 'dashboard' : 'login');
+    }
+  }
+
+  window.addEventListener('hashchange', route);
+  route();
+  updateNav();
+
+  // Enter key to login
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('page-login').classList.contains('active')) doLogin();
+  });
+</script>
+</body>
+</html>
